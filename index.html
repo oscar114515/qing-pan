@@ -15,6 +15,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <style>
+        /* ===== 完整样式（与之前相同，但为了完整，此处保留全部） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -1012,6 +1013,9 @@
         .auth-modal-box .google-btn:hover {
             background: #f5f5f5;
         }
+        .auth-modal-box .google-btn svg {
+            flex-shrink: 0;
+        }
         .auth-modal-box .divider {
             display: flex;
             align-items: center;
@@ -1370,7 +1374,7 @@
                 <div class="file-count">📁 共 <span id="fileCountNum">0</span> 個檔案</div>
             </div>
             <div id="fileList">
-                <div class="empty-state">📭 還沒有檔案，快來上傳第一個吧！</div>
+                <!-- 未登入時完全空白，由 JavaScript 控制 -->
             </div>
         </div>
 
@@ -1451,10 +1455,11 @@
                     <button class="tab-btn active" id="loginTabBtn">登錄</button>
                     <button class="tab-btn" id="registerTabBtn">註冊</button>
                 </div>
+                <!-- ===== 登錄面板（Email + 密碼） ===== -->
                 <div id="loginPanel" class="form-panel">
                     <div id="loginMessage" class="message-box"></div>
-                    <div class="input-group"><input type="text" id="loginName" class="input-field" placeholder="姓名"></div>
-                    <div class="input-group"><input type="password" id="loginPassword" class="input-field" placeholder="密碼"></div>
+                    <div class="input-group"><input type="email" id="loginEmail" class="input-field" placeholder="電子郵件" /></div>
+                    <div class="input-group"><input type="password" id="loginPassword" class="input-field" placeholder="密碼" /></div>
                     <button class="action-btn" id="loginSubmitBtn">登入</button>
                     <div class="divider"><span>或</span></div>
                     <button class="google-btn" id="googleLoginBtn">
@@ -1467,11 +1472,12 @@
                         使用 Google 登入
                     </button>
                 </div>
+                <!-- ===== 註冊面板（Email + 密碼） ===== -->
                 <div id="registerPanel" class="form-panel hidden">
                     <div id="registerMessage" class="message-box"></div>
-                    <div class="input-group"><input type="text" id="regName" class="input-field" placeholder="姓名"></div>
-                    <div class="input-group"><input type="password" id="regPassword" class="input-field" placeholder="設定密碼 (至少4位)"></div>
-                    <div class="input-group"><input type="password" id="regConfirmPassword" class="input-field" placeholder="確認密碼"></div>
+                    <div class="input-group"><input type="email" id="regEmail" class="input-field" placeholder="電子郵件" /></div>
+                    <div class="input-group"><input type="password" id="regPassword" class="input-field" placeholder="設定密碼 (至少6位)" /></div>
+                    <div class="input-group"><input type="password" id="regConfirmPassword" class="input-field" placeholder="確認密碼" /></div>
                     <button class="action-btn" id="registerSubmitBtn">註冊</button>
                     <div class="divider"><span>或</span></div>
                     <button class="google-btn" id="googleRegisterBtn">
@@ -1595,12 +1601,15 @@
         const registerTabBtn = document.getElementById('registerTabBtn');
         const loginPanel = document.getElementById('loginPanel');
         const registerPanel = document.getElementById('registerPanel');
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPassword = document.getElementById('loginPassword');
         const loginMessage = document.getElementById('loginMessage');
+        const regEmail = document.getElementById('regEmail');
+        const regPassword = document.getElementById('regPassword');
+        const regConfirmPassword = document.getElementById('regConfirmPassword');
         const registerMessage = document.getElementById('registerMessage');
         const googleLoginBtn = document.getElementById('googleLoginBtn');
         const googleRegisterBtn = document.getElementById('googleRegisterBtn');
-        const loginSubmit = document.getElementById('loginSubmitBtn');
-        const registerSubmit = document.getElementById('registerSubmitBtn');
 
         const adminModalUsers = document.getElementById('adminModalUsers');
         const closeAdminModalUsers = document.getElementById('closeAdminModalUsers');
@@ -1725,7 +1734,9 @@
             authLoggedInPanel.style.display = 'none';
             localStorage.removeItem('currentUser');
             hideLoading();
-            loadFileList();
+            // 未登入時清空檔案列表
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('fileCountNum').textContent = '0';
         }
 
         function openAuthModal() {
@@ -1748,8 +1759,62 @@
         }
 
         // ============================================================
-        // 5. Firebase 認證
+        // 5. Firebase 認證（Email + 密碼 + Google）
         // ============================================================
+
+        // ----- Email + 密碼 登入 -----
+        async function emailLogin() {
+            const email = loginEmail.value.trim();
+            const password = loginPassword.value.trim();
+            if (!email || !password) {
+                showMsg(loginMessage, '請填寫完整資訊', 'error');
+                return;
+            }
+            showLoading('登入中...');
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                closeAuthModal();
+            } catch (e) {
+                hideLoading();
+                showMsg(loginMessage, '登入失敗：' + e.message, 'error');
+            }
+        }
+
+        // ----- Email + 密碼 註冊 -----
+        async function emailRegister() {
+            const email = regEmail.value.trim();
+            const password = regPassword.value.trim();
+            const confirm = regConfirmPassword.value.trim();
+            if (!email || !password || !confirm) {
+                showMsg(registerMessage, '請填寫完整資訊', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showMsg(registerMessage, '密碼至少 6 位', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showMsg(registerMessage, '兩次密碼輸入不一致', 'error');
+                return;
+            }
+            showLoading('註冊中...');
+            try {
+                const result = await auth.createUserWithEmailAndPassword(email, password);
+                // 儲存用戶資訊
+                await db.ref('users/' + result.user.uid).set({
+                    name: email.split('@')[0] || '用戶',
+                    email: email,
+                    photo: '',
+                    lastLogin: Date.now()
+                });
+                closeAuthModal();
+            } catch (e) {
+                hideLoading();
+                showMsg(registerMessage, '註冊失敗：' + e.message, 'error');
+            }
+        }
+
+        // ----- Google 登入 -----
         async function googleLogin() {
             showLoading('Google 登入中...');
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -1778,10 +1843,15 @@
             hideUI();
         }
 
+        // ----- 綁定按鈕事件 -----
+        document.getElementById('loginSubmitBtn').addEventListener('click', emailLogin);
+        document.getElementById('registerSubmitBtn').addEventListener('click', emailRegister);
         googleLoginBtn.addEventListener('click', googleLogin);
         googleRegisterBtn.addEventListener('click', googleLogin);
-        loginSubmit.addEventListener('click', googleLogin);
-        registerSubmit.addEventListener('click', googleLogin);
+
+        // Enter 鍵支援
+        loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') emailLogin(); });
+        regConfirmPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') emailRegister(); });
 
         // ============================================================
         // 6. 用戶管理
@@ -1895,8 +1965,6 @@
         // ============================================================
         // 核心下載：永不跳轉 + 密碼驗證
         // ============================================================
-        let currentDownloadFileId = null;
-        let currentDownloadPassword = null;
         let _passwordVerified = false;
 
         async function downloadFileDirect(url, fileName, fileId, password) {
@@ -1907,9 +1975,6 @@
                 document.getElementById('passwordError').classList.remove('show');
                 document.getElementById('directDownloadBtn').disabled = true;
                 document.getElementById('directDownloadBtn').textContent = '🔐 請輸入密碼';
-
-                currentDownloadFileId = fileId;
-                currentDownloadPassword = password;
 
                 const input = document.getElementById('passwordInput');
                 const btn = document.getElementById('directDownloadBtn');
@@ -2138,33 +2203,45 @@
         }
 
         // ============================================================
-        // 9. 載入檔案列表（含自刪除功能）
+        // 9. 載入檔案列表（嚴格的權限控制）
         // ============================================================
         async function loadFileList() {
+            const user = auth.currentUser;
+            const container = document.getElementById('fileList');
+
+            // 🔥 未登入：完全空白，不顯示任何檔案
+            if (!user) {
+                container.innerHTML = '';
+                document.getElementById('fileCountNum').textContent = '0';
+                return;
+            }
+
+            // 已登入：只顯示自己的檔案
             try {
-                let query = supabaseClient.from('files').select('*');
-                if (!isAdmin) {
-                    const uid = getCurrentUserUid();
-                    if (uid) {
-                        query = query.eq('uploader', uid);
-                    } else {
-                        query = query.eq('uploader', '');
-                    }
+                const uid = getCurrentUserUid();
+                if (!uid) {
+                    container.innerHTML = '';
+                    document.getElementById('fileCountNum').textContent = '0';
+                    return;
                 }
-                const { data, error } = await query.order('created_at', { ascending: false });
+
+                const { data, error } = await supabaseClient
+                    .from('files')
+                    .select('*')
+                    .eq('uploader', uid)
+                    .order('created_at', { ascending: false });
+
                 if (error) throw error;
 
                 const count = data?.length || 0;
                 document.getElementById('fileCountNum').textContent = count;
 
-                const container = document.getElementById('fileList');
                 if (!data || count === 0) {
                     container.innerHTML = `<div class="empty-state">📭 還沒有檔案，快來上傳第一個吧！</div>`;
                     return;
                 }
 
                 let html = '';
-                const currentUid = getCurrentUserUid();
                 data.forEach(f => {
                     const sizeMB = (f.file_size / 1024 / 1024).toFixed(1);
                     const shortLink = window.location.origin + window.location.pathname + '?download=' + f.short_code;
@@ -2187,10 +2264,9 @@
                     const passwordBadge = f.password ? '🔐 有密碼' : '';
 
                     const uploaderDisplay = f.uploader_name || f.uploader_email || '匿名用戶';
-                    const uploaderInfo = isAdmin ? ` · 上傳者: ${uploaderDisplay}` : ` · 👤 ${uploaderDisplay}`;
 
-                    // 删除按钮：管理员 或 文件所有者
-                    const canDelete = isAdmin || (currentUid && f.uploader === currentUid);
+                    // 🔥 刪除按鈕：僅檔案擁有者可刪除（isAdmin 時仍可刪除全部）
+                    const canDelete = isAdmin || (uid && f.uploader === uid);
 
                     html += `
                         <div class="file-item">
@@ -2199,7 +2275,7 @@
                                 <div>
                                     <div class="name">${f.file_name}</div>
                                     <div class="meta">
-                                        ${sizeMB} MB · ${f.download_count || 0} 次下載 · ${time}${uploaderInfo}
+                                        ${sizeMB} MB · ${f.download_count || 0} 次下載 · ${time}
                                         <span class="expiry-badge ${expiryClass}">${expiryLabel}</span>
                                         ${passwordBadge ? `<span class="password-badge">${passwordBadge}</span>` : ''}
                                     </div>
@@ -2216,8 +2292,7 @@
                 });
                 container.innerHTML = html;
             } catch (err) {
-                document.getElementById('fileList').innerHTML =
-                    `<div class="empty-state" style="color:#b91c1c;">❌ 載入失敗: ${err.message}</div>`;
+                container.innerHTML = `<div class="empty-state" style="color:#b91c1c;">❌ 載入失敗: ${err.message}</div>`;
             }
         }
 
@@ -2361,7 +2436,6 @@
 
                 window._downloadURL = data.download_url;
                 window._downloadFileName = data.file_name;
-                window._downloadFileId = data.id;
                 window._downloadPassword = data.password || '';
 
                 if (data.password) {
@@ -2416,8 +2490,7 @@
                     document.getElementById('passwordInput').focus();
                     return;
                 }
-                downloadFileDirect(window._downloadURL, window._downloadFileName, window._downloadFileId, window
-                    ._downloadPassword);
+                downloadFileDirect(window._downloadURL, window._downloadFileName, null, window._downloadPassword);
             } else {
                 alert('無法下載，請重新整理頁面');
             }
@@ -2568,7 +2641,7 @@
             setTimeout(cleanExpiredFiles, 3000);
         };
 
-        console.log('☁️ 輕盤 · 完整版（Logo + 自刪 + 密碼 + 過期）');
+        console.log('☁️ 輕盤 · 完整修復版（登入 + 權限修復）');
         console.log('🔑 管理員入口: ?admin');
         console.log('👤 當前用戶:', auth.currentUser?.displayName || '未登入');
     </script>
