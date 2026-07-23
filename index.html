@@ -13,7 +13,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <style>
-        /* ===== 全部样式（与之前相同，保留） ===== */
+        /* ===== 所有样式（与之前相同，完整保留） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -897,7 +897,7 @@
             background: #f1f4f9;
         }
 
-        /* ===== 登入彈窗（使用姓名 + 密碼） ===== */
+        /* ===== 登入彈窗 ===== */
         .auth-modal-overlay {
             position: fixed;
             top: 0;
@@ -1362,7 +1362,7 @@
             </div>
             <div class="topbar-actions">
                 <span class="admin-badge" id="adminBadge">👑 管理員</span>
-                <button class="exit-admin-btn" id="exitAdminBtn" onclick="exitAdmin()">退出管理</button>
+                <button class="exit-admin-btn" id="exitAdminBtn" onclick="exitAdminMode()">退出管理</button>
                 <button id="adminSecretBtn" onclick="adminSecretClick()" aria-label="管理入口">⋅⋅⋅</button>
             </div>
         </div>
@@ -1447,7 +1447,7 @@
         </div>
     </div>
 
-    <!-- ===== 管理員登入模態框（保留，但功能獨立） ===== -->
+    <!-- ===== 管理員登入模態框 ===== -->
     <div class="modal-overlay" id="adminModal">
         <div class="modal-box">
             <h2>🔐 管理員登入</h2>
@@ -1460,7 +1460,7 @@
         </div>
     </div>
 
-    <!-- ===== 登入彈窗（姓名 + 密碼，取自您提供的邏輯） ===== -->
+    <!-- ===== 登入彈窗 ===== -->
     <div class="auth-modal-overlay" id="authModal">
         <div class="auth-modal-box">
             <div class="brand"><h2>歡迎使用</h2></div>
@@ -1475,7 +1475,7 @@
                     <button class="tab-btn active" id="loginTabBtn">登錄</button>
                     <button class="tab-btn" id="registerTabBtn">註冊</button>
                 </div>
-                <!-- ===== 登錄面板（姓名 + 密碼） ===== -->
+                <!-- 登錄面板 -->
                 <div id="loginPanel" class="form-panel">
                     <div id="loginMessage" class="message-box"></div>
                     <div class="input-group"><input type="text" id="loginName" class="input-field" placeholder="姓名" /></div>
@@ -1492,7 +1492,7 @@
                         使用 Google 登入
                     </button>
                 </div>
-                <!-- ===== 註冊面板（姓名 + 密碼） ===== -->
+                <!-- 註冊面板 -->
                 <div id="registerPanel" class="form-panel hidden">
                     <div id="registerMessage" class="message-box"></div>
                     <div class="input-group"><input type="text" id="regName" class="input-field" placeholder="姓名" /></div>
@@ -1555,7 +1555,7 @@
 
     <script>
         // ============================================================
-        // 1. Firebase 配置（使用 Realtime Database）
+        // 1. Firebase 配置（Realtime Database）
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyCkJhI7FwrRNlNhPn9tp9w_aTKj--SUg7I",
@@ -1569,7 +1569,7 @@
         const db = firebase.database();
 
         // ============================================================
-        // 2. Supabase 設定（檔案儲存）
+        // 2. Supabase 設定
         // ============================================================
         const SUPABASE_URL = 'https://mpygxmnugiknpqlkzczm.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_JHvmzxxmPDCyP7PH9eYtzQ_GWOBVHPS';
@@ -1582,7 +1582,29 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============================================================
-        // 3. 加載控制
+        // 3. 全局狀態
+        // ============================================================
+        let currentUser = null;
+        let isAdminMode = false;
+        let autoCheckTimer = null;
+
+        // ============================================================
+        // 4. 輔助函數
+        // ============================================================
+        function getCurrentUser() { return currentUser; }
+
+        function getCurrentUserUid() { return currentUser ? currentUser.uid : null; }
+
+        function getCurrentUserName() { return currentUser ? currentUser.name : null; }
+
+        function isAdminUser(name) {
+            if (!name) return false;
+            const adminNames = ['梁喆', 'oscar', 'admin'];
+            return adminNames.includes(name.toLowerCase());
+        }
+
+        // ============================================================
+        // 5. 加載控制
         // ============================================================
         let loadingTimer = null;
 
@@ -1602,13 +1624,12 @@
         }
 
         // ============================================================
-        // 4. 頭像與 UI 控制
+        // 6. 頭像與 UI 控制（整合）
         // ============================================================
         const authNavLink = document.getElementById('authNavLink');
         const avatarBtn = document.getElementById('avatarBtn');
         const avatarImg = document.getElementById('avatarImg');
         const avatarPlaceholder = document.getElementById('avatarPlaceholder');
-
         const authModal = document.getElementById('authModal');
         const authPanel = document.getElementById('authPanel');
         const authLoggedInPanel = document.getElementById('authLoggedInPanel');
@@ -1639,19 +1660,6 @@
         const avatarCanvas = document.getElementById('avatarCanvas');
         const avatarCtx = avatarCanvas.getContext('2d');
 
-        // ============================================================
-        // 5. 管理員判斷（硬編碼）
-        // ============================================================
-        const ADMIN_NAMES = ['梁喆', 'oscar', 'admin'];
-
-        function isAdminUser(username) {
-            if (!username) return false;
-            return ADMIN_NAMES.includes(username.toLowerCase());
-        }
-
-        // ============================================================
-        // 6. 頭像生成器（Identicon）
-        // ============================================================
         function generateIdenticon(name) {
             const seed = name || 'default';
             const encoder = new TextEncoder();
@@ -1693,9 +1701,18 @@
             return avatarCanvas.toDataURL('image/png');
         }
 
-        // ============================================================
-        // 7. UI 工具函數
-        // ============================================================
+        function updateAvatar(photoUrl, name) {
+            if (photoUrl && photoUrl.startsWith('http')) {
+                avatarImg.src = photoUrl;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            } else {
+                avatarImg.src = generateIdenticon(name || 'default');
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            }
+        }
+
         function showMsg(el, text, type) {
             el.textContent = text;
             el.className = 'message-box message-' + type;
@@ -1717,19 +1734,11 @@
             loginTabBtn.classList.remove('active');
         }
 
-        function updateAvatar(photoUrl, name) {
-            if (photoUrl && photoUrl.startsWith('http')) {
-                avatarImg.src = photoUrl;
-                avatarImg.style.display = 'block';
-                avatarPlaceholder.style.display = 'none';
-            } else {
-                avatarImg.src = generateIdenticon(name || 'default');
-                avatarImg.style.display = 'block';
-                avatarPlaceholder.style.display = 'none';
-            }
-        }
-
+        // ============================================================
+        // 7. 登入 / 登出 / UI 更新（關鍵）
+        // ============================================================
         function showUI(user) {
+            currentUser = user;
             authNavLink.textContent = '登出';
             authNavLink.className = 'auth-link logout';
             authNavLink.removeEventListener('click', openAuthModal);
@@ -1742,7 +1751,6 @@
             authDisplayEmail.textContent = user.email || '';
             if (isAdminUser(user.name)) {
                 authAdminBtn.style.display = 'block';
-                // 自動啟用管理員模式
                 enableAdminMode();
             } else {
                 authAdminBtn.style.display = 'none';
@@ -1750,10 +1758,14 @@
             }
             localStorage.setItem('currentUser', JSON.stringify(user));
             hideLoading();
+            // 🔥 登入後立即檢查
             loadFileList();
+            // 啟動定時檢查
+            startAutoCheck();
         }
 
         function hideUI() {
+            currentUser = null;
             authNavLink.textContent = '登入';
             authNavLink.className = 'auth-link';
             authNavLink.removeEventListener('click', openAuthModal);
@@ -1767,8 +1779,9 @@
             hideLoading();
             document.getElementById('fileList').innerHTML = '';
             document.getElementById('fileCountNum').textContent = '0';
-            // 關閉管理員模式
             disableAdminMode();
+            // 停止定時檢查
+            stopAutoCheck();
         }
 
         function openAuthModal() {
@@ -1791,121 +1804,75 @@
         }
 
         function enableAdminMode() {
+            isAdminMode = true;
             document.getElementById('adminBadge').classList.add('show');
             document.getElementById('exitAdminBtn').classList.add('show');
-            window._isAdmin = true;
+            // 管理員模式下重新載入所有檔案
+            loadFileList();
         }
 
         function disableAdminMode() {
+            isAdminMode = false;
             document.getElementById('adminBadge').classList.remove('show');
             document.getElementById('exitAdminBtn').classList.remove('show');
-            window._isAdmin = false;
+            // 退出管理員模式後重新載入自己的檔案
+            loadFileList();
+        }
+
+        function exitAdminMode() {
+            disableAdminMode();
+            showStatus('已退出管理員模式', 'info');
         }
 
         // ============================================================
-        // 8. Firebase Realtime Database 登入/註冊（取自您的邏輯）
+        // 8. 登入 / 註冊 / Google 登入（取自您的邏輯）
         // ============================================================
-
-        // ----- Google 登入 -----
         async function googleLogin() {
             showLoading('Google 登入中...');
-            // 注意：這裡的 Google 登入會使用 Firebase Auth，但我們仍將用戶信息存入 Realtime Database
-            // 為了簡化，我們直接使用您的邏輯中 auth 的 Google 登入
-            // 但實際上，您的登錄系統中 Google 登入使用了 firebase.auth()
-            // 由於我們沒有引入 firebase-auth，這裡暫時禁用 Google 按鈕，或者我們可以保留但用彈窗提示
-            // 為了完整兼容，我將保留 Google 登入但使用您的原始方式
-            // 但由於我們只引入了 firebase-database，沒有 firebase-auth，所以 Google 登入會失敗
-            // 解決方案：用彈窗提示用戶使用姓名+密碼登入
+            // 由於未引入 firebase-auth，此功能暫時禁用
             hideLoading();
             showMsg(loginMessage, '⚠️ 請使用「姓名 + 密碼」登入，Google 功能暫未啟用', 'error');
-            // 備註：如果需要 Google 登入，請額外引入 firebase-auth 並使用您的原始邏輯
         }
 
-        // ----- 註冊 -----
         async function handleRegister() {
             const name = regName.value.trim();
             const pw = regPassword.value;
             const cf = regConfirmPassword.value;
 
-            if (!name || !pw || !cf) {
-                showMsg(registerMessage, '請填寫所有欄位', 'error');
-                return;
-            }
-            if (name.length < 2) {
-                showMsg(registerMessage, '姓名至少 2 個字元', 'error');
-                return;
-            }
-            if (pw.length < 4) {
-                showMsg(registerMessage, '密碼至少 4 個字元', 'error');
-                return;
-            }
-            if (pw !== cf) {
-                showMsg(registerMessage, '密碼不一致', 'error');
-                return;
-            }
+            if (!name || !pw || !cf) { showMsg(registerMessage, '請填寫所有欄位', 'error'); return; }
+            if (name.length < 2) { showMsg(registerMessage, '姓名至少 2 個字元', 'error'); return; }
+            if (pw.length < 4) { showMsg(registerMessage, '密碼至少 4 個字元', 'error'); return; }
+            if (pw !== cf) { showMsg(registerMessage, '密碼不一致', 'error'); return; }
 
             showLoading('註冊中...');
             registerSubmit.disabled = true;
             registerSubmit.innerHTML = '<span class="spinner"></span>註冊中...';
 
             try {
-                // 檢查姓名是否已被使用
                 const snap = await db.ref('users').orderByChild('name').equalTo(name).once('value');
-                if (snap.exists()) {
-                    showMsg(registerMessage, '此姓名已被使用', 'error');
+                if (snap.exists()) { showMsg(registerMessage, '此姓名已被使用', 'error');
                     hideLoading();
                     registerSubmit.disabled = false;
-                    registerSubmit.textContent = '註冊';
-                    return;
-                }
-
-                // 生成頭像
+                    registerSubmit.textContent = '註冊'; return; }
                 const avatar = generateIdenticon(name);
-
-                // 儲存到 Realtime Database
                 const ref = db.ref('users').push();
-                await ref.set({
-                    name: name,
-                    password: pw,
-                    photo: avatar,
-                    createdAt: Date.now()
-                });
-
-                const userData = {
-                    name: name,
-                    email: '',
-                    photo: avatar,
-                    uid: ref.key
-                };
-
+                await ref.set({ name, password: pw, photo: avatar, createdAt: Date.now() });
+                const userData = { name, email: '', photo: avatar, uid: ref.key };
                 showUI(userData);
                 closeAuthModal();
-
-                // 清空表單
                 regName.value = '';
                 regPassword.value = '';
                 regConfirmPassword.value = '';
-
-                showMsg(registerMessage, '✅ 註冊成功！', 'success');
-
-            } catch (e) {
-                showMsg(registerMessage, '註冊失敗：' + e.message, 'error');
-            } finally {
-                hideLoading();
-                registerSubmit.disabled = false;
-                registerSubmit.textContent = '註冊';
-            }
+            } catch (e) { showMsg(registerMessage, '註冊失敗', 'error');
+                hideLoading(); } finally { registerSubmit.disabled = false;
+                registerSubmit.textContent = '註冊'; }
         }
 
-        // ----- 登入 -----
         async function handleLogin() {
             const name = loginName.value.trim();
             const pw = loginPassword.value;
 
-            if (!name || !pw) {
-                showMsg(loginMessage, '請輸入姓名和密碼', 'error');
-                return;
-            }
+            if (!name || !pw) { showMsg(loginMessage, '請輸入姓名和密碼', 'error'); return; }
 
             showLoading('登入中...');
             loginSubmit.disabled = true;
@@ -1913,108 +1880,40 @@
 
             try {
                 const snap = await db.ref('users').orderByChild('name').equalTo(name).once('value');
-
-                if (!snap.exists()) {
-                    showMsg(loginMessage, '帳戶或密碼不正確', 'error');
+                if (!snap.exists()) { showMsg(loginMessage, '帳戶或密碼不正確', 'error');
                     hideLoading();
                     loginSubmit.disabled = false;
-                    loginSubmit.textContent = '登入';
-                    return;
-                }
-
+                    loginSubmit.textContent = '登入'; return; }
                 let found = false;
                 snap.forEach(child => {
                     const data = child.val();
                     if (data.password === pw) {
                         found = true;
-                        const userData = {
-                            name: data.name,
-                            email: data.email || '',
-                            photo: data.photo || '',
-                            uid: child.key
-                        };
+                        const userData = { name: data.name, email: data.email || '', photo: data.photo || '',
+                            uid: child.key };
                         showUI(userData);
                         closeAuthModal();
-                        // 更新最後登入時間
                         db.ref('users/' + child.key + '/lastLogin').set(Date.now());
                         loginName.value = '';
                         loginPassword.value = '';
                     }
                 });
-
-                if (!found) {
-                    showMsg(loginMessage, '帳戶或密碼不正確', 'error');
-                }
+                if (!found) showMsg(loginMessage, '帳戶或密碼不正確', 'error');
                 hideLoading();
-
-            } catch (e) {
-                showMsg(loginMessage, '登入失敗：' + e.message, 'error');
-                hideLoading();
-            } finally {
-                loginSubmit.disabled = false;
-                loginSubmit.textContent = '登入';
-            }
+            } catch (e) { showMsg(loginMessage, '登入失敗', 'error');
+                hideLoading(); } finally { loginSubmit.disabled = false;
+                loginSubmit.textContent = '登入'; }
         }
 
-        // ----- 登出 -----
         function handleLogout() {
             showLoading('登出中...');
             hideUI();
-            // 如果有 Firebase Auth 用戶，也登出
-            if (typeof firebase !== 'undefined' && firebase.auth) {
-                try { firebase.auth().signOut(); } catch (e) {}
-            }
-            hideLoading();
             closeAuthModal();
+            hideLoading();
         }
 
-        // ----- 綁定事件 -----
-        loginTabBtn.addEventListener('click', switchToLogin);
-        registerTabBtn.addEventListener('click', switchToRegister);
-        loginSubmit.addEventListener('click', handleLogin);
-        registerSubmit.addEventListener('click', handleRegister);
-        googleLoginBtn.addEventListener('click', googleLogin);
-        googleRegisterBtn.addEventListener('click', googleLogin);
-        authLogoutBtn.addEventListener('click', function() { handleLogout(); });
-
-        authNavLink.addEventListener('click', openAuthModal);
-
-        avatarBtn.addEventListener('click', function() {
-            const local = localStorage.getItem('currentUser');
-            if (local) {
-                openAuthModal();
-                authPanel.style.display = 'none';
-                authLoggedInPanel.style.display = 'block';
-                try {
-                    const user = JSON.parse(local);
-                    authDisplayName.textContent = user.name || '使用者';
-                    authDisplayEmail.textContent = user.email || '';
-                    if (isAdminUser(user.name)) {
-                        authAdminBtn.style.display = 'block';
-                    } else {
-                        authAdminBtn.style.display = 'none';
-                    }
-                } catch (e) {}
-            } else {
-                openAuthModal();
-            }
-        });
-
-        authAdminBtn.addEventListener('click', function() {
-            closeAuthModal();
-            setTimeout(openAdminModalFn, 300);
-        });
-
-        authModal.addEventListener('click', function(e) {
-            if (e.target === authModal) closeAuthModal();
-        });
-        closeAdminModalUsers.addEventListener('click', closeAdminModalFn);
-        adminModalUsers.addEventListener('click', function(e) {
-            if (e.target === adminModalUsers) closeAdminModalFn();
-        });
-
         // ============================================================
-        // 9. 用戶管理（管理員功能）
+        // 9. 用戶管理（管理員）
         // ============================================================
         async function loadUserTable() {
             userTableContainer.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;">載入中...</p>';
@@ -2025,7 +1924,6 @@
                     userTableContainer.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;">沒有任何用戶</p>';
                     return;
                 }
-
                 let html =
                     `<table><thead><tr><th>姓名</th><th>密碼</th><th>註冊時間</th><th>操作</th></tr></thead><tbody>`;
                 for (const [key, user] of Object.entries(data)) {
@@ -2064,25 +1962,6 @@
         let _passwordVerified = false;
         let adminClickCount = 0;
         let adminClickTimer = null;
-        let isAdminMode = false;
-
-        function getCurrentUser() {
-            const local = localStorage.getItem('currentUser');
-            if (local) {
-                try { return JSON.parse(local); } catch (e) {}
-            }
-            return null;
-        }
-
-        function getCurrentUserName() {
-            const user = getCurrentUser();
-            return user ? user.name : null;
-        }
-
-        function getCurrentUserUid() {
-            const user = getCurrentUser();
-            return user ? user.uid : null;
-        }
 
         function showStatus(text, type = 'info') {
             const el = document.getElementById('status');
@@ -2350,47 +2229,45 @@
         }
 
         // ============================================================
-        // 13. 載入檔案列表（基於用戶名）
+        // 13. 🔥 核心：loadFileList（嚴格權限 + 檢查）
         // ============================================================
         async function loadFileList() {
-            const user = getCurrentUser();
             const container = document.getElementById('fileList');
+            const user = getCurrentUser();
+            const uid = getCurrentUserUid();
 
-            if (!user) {
+            // 未登入或無 uid：清空列表
+            if (!user || !uid) {
                 container.innerHTML = '';
                 document.getElementById('fileCountNum').textContent = '0';
                 return;
             }
 
+            const isAdmin = isAdminMode || isAdminUser(user.name);
+
             try {
-                const uid = user.uid;
-                if (!uid) {
-                    container.innerHTML = '';
-                    document.getElementById('fileCountNum').textContent = '0';
-                    return;
-                }
-
-                // 檢查是否管理員模式（透過 isAdminMode 或硬編碼管理員）
-                const isAdmin = window._isAdmin || isAdminUser(user.name);
-
                 let query = supabaseClient.from('files').select('*');
                 if (!isAdmin) {
+                    // 只查詢 uploader === uid 的檔案
                     query = query.eq('uploader', uid);
                 }
                 const { data, error } = await query.order('created_at', { ascending: false });
 
                 if (error) throw error;
 
-                const count = data?.length || 0;
+                // 二次過濾（防護措施）：確保每個檔案屬於當前用戶或管理員
+                const filteredData = isAdmin ? data : (data || []).filter(f => f.uploader === uid);
+
+                const count = filteredData?.length || 0;
                 document.getElementById('fileCountNum').textContent = count;
 
-                if (!data || count === 0) {
+                if (!filteredData || count === 0) {
                     container.innerHTML = `<div class="empty-state">📭 還沒有檔案，快來上傳第一個吧！</div>`;
                     return;
                 }
 
                 let html = '';
-                data.forEach(f => {
+                filteredData.forEach(f => {
                     const sizeMB = (f.file_size / 1024 / 1024).toFixed(1);
                     const shortLink = window.location.origin + window.location.pathname + '?download=' + f.short_code;
                     const time = f.created_at ? new Date(f.created_at).toLocaleDateString() : '';
@@ -2467,7 +2344,7 @@
         }
 
         // ============================================================
-        // 14. 管理員入口（?admin 和 secret button）
+        // 14. 管理員入口
         // ============================================================
         function adminLogin() {
             const user = document.getElementById('adminUser').value.trim();
@@ -2476,16 +2353,9 @@
                 document.getElementById('adminModal').classList.remove('show');
                 enableAdminMode();
                 showStatus('👑 管理員模式已啟用', 'success');
-                loadFileList();
             } else {
                 document.getElementById('adminError').classList.add('show');
             }
-        }
-
-        function exitAdmin() {
-            disableAdminMode();
-            showStatus('已退出管理員模式', 'info');
-            loadFileList();
         }
 
         function adminSecretClick() {
@@ -2503,7 +2373,28 @@
         }
 
         // ============================================================
-        // 15. 分享連結處理
+        // 15. 🔥 定時檢查（每20秒）
+        // ============================================================
+        function startAutoCheck() {
+            stopAutoCheck(); // 確保沒有重複計時器
+            autoCheckTimer = setInterval(() => {
+                // 只有在登入狀態下才檢查
+                if (getCurrentUser()) {
+                    loadFileList();
+                    console.log('⏰ 自動檢查檔案列表 (20秒)');
+                }
+            }, 20000);
+        }
+
+        function stopAutoCheck() {
+            if (autoCheckTimer) {
+                clearInterval(autoCheckTimer);
+                autoCheckTimer = null;
+            }
+        }
+
+        // ============================================================
+        // 16. 分享連結處理
         // ============================================================
         async function handleShareLink() {
             const params = new URLSearchParams(window.location.search);
@@ -2639,7 +2530,7 @@
         }
 
         // ============================================================
-        // 16. 拖曳上傳
+        // 17. 拖曳上傳
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             const area = document.getElementById('uploadArea');
@@ -2678,7 +2569,7 @@
         });
 
         // ============================================================
-        // 17. 定期清理過期檔案
+        // 18. 定期清理過期檔案
         // ============================================================
         async function cleanExpiredFiles() {
             try {
@@ -2700,15 +2591,15 @@
                         console.error('刪除過期檔案失敗:', e);
                     }
                 }
+                // 清理後重新加載列表
                 loadFileList();
             } catch (err) {
                 console.error('清理過期檔案失敗:', err);
             }
         }
-        setInterval(cleanExpiredFiles, 60000);
 
         // ============================================================
-        // 18. 聯繫我們
+        // 19. 聯繫我們
         // ============================================================
         document.getElementById('contactBtn').addEventListener('click', function(e) {
             e.preventDefault();
@@ -2723,20 +2614,69 @@
         });
 
         // ============================================================
-        // 19. 啟動
+        // 20. 綁定事件
+        // ============================================================
+        loginTabBtn.addEventListener('click', switchToLogin);
+        registerTabBtn.addEventListener('click', switchToRegister);
+        loginSubmit.addEventListener('click', handleLogin);
+        registerSubmit.addEventListener('click', handleRegister);
+        googleLoginBtn.addEventListener('click', googleLogin);
+        googleRegisterBtn.addEventListener('click', googleLogin);
+        authLogoutBtn.addEventListener('click', function() { handleLogout(); });
+
+        authNavLink.addEventListener('click', openAuthModal);
+
+        avatarBtn.addEventListener('click', function() {
+            const local = localStorage.getItem('currentUser');
+            if (local) {
+                openAuthModal();
+                authPanel.style.display = 'none';
+                authLoggedInPanel.style.display = 'block';
+                try {
+                    const user = JSON.parse(local);
+                    authDisplayName.textContent = user.name || '使用者';
+                    authDisplayEmail.textContent = user.email || '';
+                    if (isAdminUser(user.name)) {
+                        authAdminBtn.style.display = 'block';
+                    } else {
+                        authAdminBtn.style.display = 'none';
+                    }
+                } catch (e) {}
+            } else {
+                openAuthModal();
+            }
+        });
+
+        authAdminBtn.addEventListener('click', function() {
+            closeAuthModal();
+            setTimeout(openAdminModalFn, 300);
+        });
+
+        authModal.addEventListener('click', function(e) {
+            if (e.target === authModal) closeAuthModal();
+        });
+        closeAdminModalUsers.addEventListener('click', closeAdminModalFn);
+        adminModalUsers.addEventListener('click', function(e) {
+            if (e.target === adminModalUsers) closeAdminModalFn();
+        });
+
+        // ============================================================
+        // 21. 初始化
         // ============================================================
         function initApp() {
             const local = localStorage.getItem('currentUser');
             if (local) {
                 try {
                     const user = JSON.parse(local);
-                    showUI(user);
-                } catch (e) {
-                    hideUI();
-                }
-            } else {
-                hideUI();
+                    if (user && user.uid) {
+                        showUI(user);
+                        return;
+                    }
+                } catch (e) {}
             }
+            hideUI();
+            // 定時檢查（即便未登入也不啟動，但為了安全，確保停止）
+            stopAutoCheck();
         }
 
         window.onload = function() {
@@ -2746,16 +2686,14 @@
             if (!params.get('download') && !params.has('admin')) {
                 document.getElementById('mainUI').style.display = 'block';
                 document.getElementById('downloadUI').style.display = 'none';
-                loadFileList();
                 showStatus('✅ 就緒', 'success');
-                console.log('☁️ 輕盤已啟動（Realtime Database 登入系統）');
-                console.log('👤 當前用戶:', getCurrentUserName() || '未登入');
             }
+            // 啟動過期清理（每分鐘）
+            setInterval(cleanExpiredFiles, 60000);
             setTimeout(cleanExpiredFiles, 3000);
         };
 
-        console.log('☁️ 輕盤 · 整合版（姓名+密碼登入）');
-        console.log('🔑 管理員: 梁喆 / oscar / admin');
+        console.log('🍎 輕盤 · 自動檢查版 (每20秒)');
         console.log('👤 當前用戶:', getCurrentUserName() || '未登入');
     </script>
 
