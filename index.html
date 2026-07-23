@@ -15,7 +15,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <style>
-        /* ===== 完整样式（与之前相同，但为了完整，此处保留全部） ===== */
+        /* ===== 完整样式（与之前相同） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -39,8 +39,12 @@
             z-index: 4000;
         }
         @keyframes slideDown {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(0); }
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(0);
+            }
         }
         .navbar {
             background-color: #f8f9fa;
@@ -422,10 +426,6 @@
             flex-wrap: wrap;
             gap: 8px 12px;
         }
-        .file-item:hover {
-            background: #f5f8fe;
-            border-color: #e8effb;
-        }
         .file-item .info {
             flex: 1;
             min-width: 140px;
@@ -468,8 +468,13 @@
             animation: pulseUrgent 2s ease-in-out infinite;
         }
         @keyframes pulseUrgent {
-            0%,100% { opacity:1; }
-            50% { opacity:0.5; }
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
         }
         .file-item .info .meta .password-badge {
             background: #e8eaf6;
@@ -587,7 +592,7 @@
         }
         .download-page .password-section input:focus {
             border-color: #1e5ef7;
-            box-shadow: 0 0 0 3px rgba(30,94,247,0.08);
+            box-shadow: 0 0 0 3px rgba(30, 94, 247, 0.08);
         }
         .download-page .password-section .password-error {
             color: #b91c1c;
@@ -607,13 +612,13 @@
             font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(30,94,247,0.25);
+            box-shadow: 0 6px 20px rgba(30, 94, 247, 0.25);
             transition: 0.2s;
         }
         .download-page .btn-download-big:hover {
             background: #2b6af7;
             transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(30,94,247,0.3);
+            box-shadow: 0 10px 28px rgba(30, 94, 247, 0.3);
         }
         .download-page .btn-download-big:disabled {
             opacity: 0.6;
@@ -695,8 +700,14 @@
             overflow-y: auto;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
         .upload-modal-box h2 {
             font-size: 20px;
@@ -738,7 +749,7 @@
         }
         .upload-modal-box .form-group input[type="password"]:focus {
             border-color: #1e5ef7;
-            box-shadow: 0 0 0 3px rgba(30,94,247,0.08);
+            box-shadow: 0 0 0 3px rgba(30, 94, 247, 0.08);
         }
         .upload-modal-box .form-group .hint-text {
             font-size: 12px;
@@ -770,7 +781,7 @@
             border-color: #1e5ef7;
             background: #eef4fe;
             color: #1e5ef7;
-            box-shadow: 0 0 0 3px rgba(30,94,247,0.08);
+            box-shadow: 0 0 0 3px rgba(30, 94, 247, 0.08);
         }
         .upload-modal-box .time-grid .time-option .label {
             font-weight: 600;
@@ -863,7 +874,7 @@
         .modal-box input:focus {
             border-color: #1e5ef7;
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(30,94,247,0.08);
+            box-shadow: 0 0 0 3px rgba(30, 94, 247, 0.08);
         }
         .modal-box button {
             width: 100%;
@@ -1176,8 +1187,12 @@
             margin: 0;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .modal-overlay-contact {
@@ -1263,44 +1278,124 @@
             background: #f0f0f0;
             transform: scale(0.97);
         }
-        .platform-btn-small.bili { color: #00a1d6; }
-        .platform-btn-small.xhs { color: #ff2442; }
-        .platform-btn-small.douyin { color: #000000; }
-        .platform-btn-small.yt { color: #ff0000; }
+        .platform-btn-small.bili {
+            color: #00a1d6;
+        }
+        .platform-btn-small.xhs {
+            color: #ff2442;
+        }
+        .platform-btn-small.douyin {
+            color: #000000;
+        }
+        .platform-btn-small.yt {
+            color: #ff0000;
+        }
 
         @media (max-width: 768px) {
-            .app { padding: 20px 16px 28px; border-radius: 28px; }
-            .navbar { padding: 0.5rem 1rem; }
-            .logo-area { gap: 8px; }
-            .studio-logo { height: 30px; }
-            .studio-name { font-size: 0.7rem; }
-            .logo-text { font-size: 18px; }
-            .upload-card { padding: 32px 16px; }
-            .upload-card .icon { font-size: 36px; }
-            .file-item { padding: 12px 14px; }
-            .file-item .info { flex-wrap: wrap; gap: 6px; }
-            .modal-box { padding: 28px 20px; }
-            .auth-modal-box { padding: 1.5rem; margin: 1rem; }
-            .nav-right { gap: 0.8rem; }
-            .nav-links { gap: 1rem; }
-            .loading-box { padding: 1.5rem 1.5rem; min-width: 140px; }
-            .loading-spinner-full { width: 32px; height: 32px; }
-            .modal-box-contact { padding: 24px 20px; max-width: 300px; }
-            .platform-grid-small { gap: 8px; }
-            .platform-btn-small { padding: 10px 0; font-size: 0.85rem; }
-            .qq-number { font-size: 1.3rem; }
-            .qq-icon { width: 50px; height: 50px; }
-            .upload-modal-box { padding: 24px 20px; }
-            .upload-modal-box .time-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
-            .upload-modal-box .time-grid .time-option { padding: 8px 2px; font-size: 11px; }
-            .upload-modal-box .time-grid .time-option .label { font-size: 12px; }
+            .app {
+                padding: 20px 16px 28px;
+                border-radius: 28px;
+            }
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+            .logo-area {
+                gap: 8px;
+            }
+            .studio-logo {
+                height: 30px;
+            }
+            .studio-name {
+                font-size: 0.7rem;
+            }
+            .logo-text {
+                font-size: 18px;
+            }
+            .upload-card {
+                padding: 32px 16px;
+            }
+            .upload-card .icon {
+                font-size: 36px;
+            }
+            .file-item {
+                padding: 12px 14px;
+            }
+            .file-item .info {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .modal-box {
+                padding: 28px 20px;
+            }
+            .auth-modal-box {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            .nav-right {
+                gap: 0.8rem;
+            }
+            .nav-links {
+                gap: 1rem;
+            }
+            .loading-box {
+                padding: 1.5rem 1.5rem;
+                min-width: 140px;
+            }
+            .loading-spinner-full {
+                width: 32px;
+                height: 32px;
+            }
+            .modal-box-contact {
+                padding: 24px 20px;
+                max-width: 300px;
+            }
+            .platform-grid-small {
+                gap: 8px;
+            }
+            .platform-btn-small {
+                padding: 10px 0;
+                font-size: 0.85rem;
+            }
+            .qq-number {
+                font-size: 1.3rem;
+            }
+            .qq-icon {
+                width: 50px;
+                height: 50px;
+            }
+            .upload-modal-box {
+                padding: 24px 20px;
+            }
+            .upload-modal-box .time-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            .upload-modal-box .time-grid .time-option {
+                padding: 8px 2px;
+                font-size: 11px;
+            }
+            .upload-modal-box .time-grid .time-option .label {
+                font-size: 12px;
+            }
         }
         @media (max-width: 480px) {
-            .loading-box { padding: 1.2rem 1.2rem; min-width: 120px; }
-            .loading-spinner-full { width: 28px; height: 28px; }
-            .loading-box p { font-size: 0.85rem; }
-            .upload-modal-box .time-grid { grid-template-columns: repeat(3, 1fr); }
-            .studio-name { display: none; }
+            .loading-box {
+                padding: 1.2rem 1.2rem;
+                min-width: 120px;
+            }
+            .loading-spinner-full {
+                width: 28px;
+                height: 28px;
+            }
+            .loading-box p {
+                font-size: 0.85rem;
+            }
+            .upload-modal-box .time-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .studio-name {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -1374,7 +1469,7 @@
                 <div class="file-count">📁 共 <span id="fileCountNum">0</span> 個檔案</div>
             </div>
             <div id="fileList">
-                <!-- 未登入時完全空白，由 JavaScript 控制 -->
+                <!-- 未登入時完全空白 -->
             </div>
         </div>
 
@@ -1440,7 +1535,7 @@
         </div>
     </div>
 
-    <!-- ===== 登入彈窗 ===== -->
+    <!-- ===== 登入彈窗（帳號 + 密碼） ===== -->
     <div class="auth-modal-overlay" id="authModal">
         <div class="auth-modal-box">
             <div class="brand"><h2>歡迎使用</h2></div>
@@ -1455,10 +1550,10 @@
                     <button class="tab-btn active" id="loginTabBtn">登錄</button>
                     <button class="tab-btn" id="registerTabBtn">註冊</button>
                 </div>
-                <!-- ===== 登錄面板（Email + 密碼） ===== -->
+                <!-- ===== 登錄面板（帳號 + 密碼） ===== -->
                 <div id="loginPanel" class="form-panel">
                     <div id="loginMessage" class="message-box"></div>
-                    <div class="input-group"><input type="email" id="loginEmail" class="input-field" placeholder="電子郵件" /></div>
+                    <div class="input-group"><input type="text" id="loginUsername" class="input-field" placeholder="帳號" /></div>
                     <div class="input-group"><input type="password" id="loginPassword" class="input-field" placeholder="密碼" /></div>
                     <button class="action-btn" id="loginSubmitBtn">登入</button>
                     <div class="divider"><span>或</span></div>
@@ -1472,10 +1567,10 @@
                         使用 Google 登入
                     </button>
                 </div>
-                <!-- ===== 註冊面板（Email + 密碼） ===== -->
+                <!-- ===== 註冊面板（帳號 + 密碼） ===== -->
                 <div id="registerPanel" class="form-panel hidden">
                     <div id="registerMessage" class="message-box"></div>
-                    <div class="input-group"><input type="email" id="regEmail" class="input-field" placeholder="電子郵件" /></div>
+                    <div class="input-group"><input type="text" id="regUsername" class="input-field" placeholder="帳號" /></div>
                     <div class="input-group"><input type="password" id="regPassword" class="input-field" placeholder="設定密碼 (至少6位)" /></div>
                     <div class="input-group"><input type="password" id="regConfirmPassword" class="input-field" placeholder="確認密碼" /></div>
                     <button class="action-btn" id="registerSubmitBtn">註冊</button>
@@ -1601,10 +1696,10 @@
         const registerTabBtn = document.getElementById('registerTabBtn');
         const loginPanel = document.getElementById('loginPanel');
         const registerPanel = document.getElementById('registerPanel');
-        const loginEmail = document.getElementById('loginEmail');
+        const loginUsername = document.getElementById('loginUsername');
         const loginPassword = document.getElementById('loginPassword');
         const loginMessage = document.getElementById('loginMessage');
-        const regEmail = document.getElementById('regEmail');
+        const regUsername = document.getElementById('regUsername');
         const regPassword = document.getElementById('regPassword');
         const regConfirmPassword = document.getElementById('regConfirmPassword');
         const registerMessage = document.getElementById('registerMessage');
@@ -1734,7 +1829,6 @@
             authLoggedInPanel.style.display = 'none';
             localStorage.removeItem('currentUser');
             hideLoading();
-            // 未登入時清空檔案列表
             document.getElementById('fileList').innerHTML = '';
             document.getElementById('fileCountNum').textContent = '0';
         }
@@ -1759,34 +1853,73 @@
         }
 
         // ============================================================
-        // 5. Firebase 認證（Email + 密碼 + Google）
+        // 5. Firebase 認證（帳號 + 密碼 + Google）
         // ============================================================
 
-        // ----- Email + 密碼 登入 -----
-        async function emailLogin() {
-            const email = loginEmail.value.trim();
+        // 🔥 將帳號轉為 Email 格式（Firebase 底層要求）
+        function usernameToEmail(username) {
+            return username.trim().toLowerCase() + '@qingpan.user';
+        }
+
+        // ----- 帳號 + 密碼 登入 -----
+        async function accountLogin() {
+            const username = loginUsername.value.trim();
             const password = loginPassword.value.trim();
-            if (!email || !password) {
-                showMsg(loginMessage, '請填寫完整資訊', 'error');
+
+            if (!username) {
+                showMsg(loginMessage, '請輸入帳號', 'error');
                 return;
             }
+            if (username.length < 2) {
+                showMsg(loginMessage, '帳號至少 2 個字元', 'error');
+                return;
+            }
+            if (!password) {
+                showMsg(loginMessage, '請輸入密碼', 'error');
+                return;
+            }
+
+            const email = usernameToEmail(username);
             showLoading('登入中...');
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 closeAuthModal();
             } catch (e) {
                 hideLoading();
-                showMsg(loginMessage, '登入失敗：' + e.message, 'error');
+                let msg = '登入失敗：';
+                if (e.code === 'auth/user-not-found') {
+                    msg = '帳號不存在，請先註冊';
+                } else if (e.code === 'auth/wrong-password') {
+                    msg = '密碼錯誤，請重新輸入';
+                } else if (e.code === 'auth/too-many-requests') {
+                    msg = '嘗試次數過多，請稍後再試';
+                } else {
+                    msg += e.message;
+                }
+                showMsg(loginMessage, msg, 'error');
             }
         }
 
-        // ----- Email + 密碼 註冊 -----
-        async function emailRegister() {
-            const email = regEmail.value.trim();
+        // ----- 帳號 + 密碼 註冊 -----
+        async function accountRegister() {
+            const username = regUsername.value.trim();
             const password = regPassword.value.trim();
             const confirm = regConfirmPassword.value.trim();
-            if (!email || !password || !confirm) {
-                showMsg(registerMessage, '請填寫完整資訊', 'error');
+
+            if (!username) {
+                showMsg(registerMessage, '請輸入帳號', 'error');
+                return;
+            }
+            if (username.length < 2) {
+                showMsg(registerMessage, '帳號至少 2 個字元', 'error');
+                return;
+            }
+            if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) {
+                showMsg(registerMessage, '帳號只能包含字母、數字、底線', 'error');
+                return;
+            }
+            if (!password) {
+                showMsg(registerMessage, '請設定密碼', 'error');
                 return;
             }
             if (password.length < 6) {
@@ -1797,24 +1930,36 @@
                 showMsg(registerMessage, '兩次密碼輸入不一致', 'error');
                 return;
             }
+
+            const email = usernameToEmail(username);
             showLoading('註冊中...');
             try {
                 const result = await auth.createUserWithEmailAndPassword(email, password);
-                // 儲存用戶資訊
+                // 更新用戶顯示名稱
+                await result.user.updateProfile({ displayName: username });
                 await db.ref('users/' + result.user.uid).set({
-                    name: email.split('@')[0] || '用戶',
+                    name: username,
                     email: email,
+                    username: username,
                     photo: '',
                     lastLogin: Date.now()
                 });
                 closeAuthModal();
             } catch (e) {
                 hideLoading();
-                showMsg(registerMessage, '註冊失敗：' + e.message, 'error');
+                let msg = '註冊失敗：';
+                if (e.code === 'auth/email-already-in-use') {
+                    msg = '此帳號已被註冊，請直接登入';
+                } else if (e.code === 'auth/weak-password') {
+                    msg = '密碼強度不足，請至少 6 位';
+                } else {
+                    msg += e.message;
+                }
+                showMsg(registerMessage, msg, 'error');
             }
         }
 
-        // ----- Google 登入 -----
+        // ----- Google 登入（保留） -----
         async function googleLogin() {
             showLoading('Google 登入中...');
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -1822,9 +1967,10 @@
                 const result = await auth.signInWithPopup(provider);
                 const u = result.user;
                 await db.ref('users/' + u.uid).set({
-                    name: u.displayName,
+                    name: u.displayName || 'Google用戶',
                     email: u.email,
-                    photo: u.photoURL,
+                    username: u.email ? u.email.split('@')[0] : 'google_user',
+                    photo: u.photoURL || '',
                     lastLogin: Date.now()
                 });
                 showUI(u);
@@ -1844,14 +1990,13 @@
         }
 
         // ----- 綁定按鈕事件 -----
-        document.getElementById('loginSubmitBtn').addEventListener('click', emailLogin);
-        document.getElementById('registerSubmitBtn').addEventListener('click', emailRegister);
+        document.getElementById('loginSubmitBtn').addEventListener('click', accountLogin);
+        document.getElementById('registerSubmitBtn').addEventListener('click', accountRegister);
         googleLoginBtn.addEventListener('click', googleLogin);
         googleRegisterBtn.addEventListener('click', googleLogin);
 
-        // Enter 鍵支援
-        loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') emailLogin(); });
-        regConfirmPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') emailRegister(); });
+        loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') accountLogin(); });
+        regConfirmPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') accountRegister(); });
 
         // ============================================================
         // 6. 用戶管理
@@ -1866,10 +2011,10 @@
                     return;
                 }
                 let html =
-                    `<table><thead><tr><th>姓名</th><th>Email</th><th>操作</th></tr></thead><tbody>`;
+                    `<table><thead><tr><th>帳號</th><th>Email</th><th>操作</th></tr></thead><tbody>`;
                 for (const [uid, userData] of Object.entries(data)) {
                     html += `<tr>
-                        <td>${userData.name || '-'}</td>
+                        <td>${userData.username || userData.name || '-'}</td>
                         <td>${userData.email || '-'}</td>
                         <td><button class="delete-user-btn" onclick="window._deleteUser('${uid}')"><i class="fas fa-trash"></i> 刪除</button></td>
                     </tr>`;
@@ -1893,7 +2038,7 @@
         };
 
         // ============================================================
-        // 7. 輕盤核心功能
+        // 7. 輕盤核心功能（與之前相同）
         // ============================================================
         let isAdmin = false;
         let adminClickCount = 0;
@@ -1907,7 +2052,7 @@
             if (local) {
                 try {
                     const user = JSON.parse(local);
-                    return user.name || user.email || '匿名用戶';
+                    return user.name || user.username || user.email || '匿名用戶';
                 } catch (e) {}
             }
             const firebaseUser = auth.currentUser;
@@ -2203,20 +2348,18 @@
         }
 
         // ============================================================
-        // 9. 載入檔案列表（嚴格的權限控制）
+        // 9. 載入檔案列表
         // ============================================================
         async function loadFileList() {
             const user = auth.currentUser;
             const container = document.getElementById('fileList');
 
-            // 🔥 未登入：完全空白，不顯示任何檔案
             if (!user) {
                 container.innerHTML = '';
                 document.getElementById('fileCountNum').textContent = '0';
                 return;
             }
 
-            // 已登入：只顯示自己的檔案
             try {
                 const uid = getCurrentUserUid();
                 if (!uid) {
@@ -2264,8 +2407,6 @@
                     const passwordBadge = f.password ? '🔐 有密碼' : '';
 
                     const uploaderDisplay = f.uploader_name || f.uploader_email || '匿名用戶';
-
-                    // 🔥 刪除按鈕：僅檔案擁有者可刪除（isAdmin 時仍可刪除全部）
                     const canDelete = isAdmin || (uid && f.uploader === uid);
 
                     html += `
@@ -2565,7 +2706,7 @@
                 authPanel.style.display = 'none';
                 authLoggedInPanel.style.display = 'block';
                 const user = JSON.parse(local);
-                authDisplayName.textContent = user.name || '使用者';
+                authDisplayName.textContent = user.name || user.username || '使用者';
                 authDisplayEmail.textContent = user.email || '';
                 if (isAdminUser(user)) {
                     authAdminBtn.style.display = 'block';
@@ -2615,9 +2756,10 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 const ud = {
-                    name: user.displayName,
+                    name: user.displayName || '使用者',
+                    username: user.displayName || '使用者',
                     email: user.email,
-                    photo: user.photoURL,
+                    photo: user.photoURL || '',
                     uid: user.uid
                 };
                 localStorage.setItem('currentUser', JSON.stringify(ud));
@@ -2635,13 +2777,13 @@
                 document.getElementById('downloadUI').style.display = 'none';
                 loadFileList();
                 showStatus('✅ 就緒', 'success');
-                console.log('☁️ 輕盤已啟動（密碼 + 自動刪除 + 自刪檔案）');
+                console.log('☁️ 輕盤已啟動（帳號+密碼登入）');
                 console.log('👤 已登入:', !!auth.currentUser);
             }
             setTimeout(cleanExpiredFiles, 3000);
         };
 
-        console.log('☁️ 輕盤 · 完整修復版（登入 + 權限修復）');
+        console.log('☁️ 輕盤 · 帳號密碼登入版');
         console.log('🔑 管理員入口: ?admin');
         console.log('👤 當前用戶:', auth.currentUser?.displayName || '未登入');
     </script>
