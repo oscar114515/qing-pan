@@ -13,7 +13,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <style>
-        /* ===== 全部样式（主站 + 下载页） ===== */
+        /* ===== 全部样式（与之前相同，确保完整） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -37,12 +37,8 @@
             z-index: 4000;
         }
         @keyframes slideDown {
-            0% {
-                transform: translateY(-100%);
-            }
-            100% {
-                transform: translateY(0);
-            }
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(0); }
         }
         .navbar {
             background-color: #f8f9fa;
@@ -545,7 +541,7 @@
             font-size: 15px;
         }
 
-        /* ===== 下載頁面（全新美化） ===== */
+        /* ===== 下载页面 ===== */
         .download-card {
             max-width: 480px;
             width: 100%;
@@ -739,7 +735,7 @@
             margin: 4px 0 16px;
         }
 
-        /* ===== 弹窗样式（主站） ===== */
+        /* ===== 弹窗 ===== */
         .upload-modal-overlay {
             position: fixed;
             top: 0;
@@ -1271,6 +1267,7 @@
             font-weight: 500;
             margin: 0;
         }
+
         .modal-overlay-contact {
             position: fixed;
             top: 0;
@@ -1560,7 +1557,7 @@
                 <!-- 未登入時完全空白 -->
             </div>
         </div>
-        <!-- 下載頁面容器（將被動態填充） -->
+        <!-- 下載頁面容器 -->
         <div id="downloadContainer" style="display:none;"></div>
     </div>
 
@@ -1701,10 +1698,8 @@
 
     <script>
         // ============================================================
-        // 完整 JavaScript（主站 + 美化下载页）
+        // 1. Firebase 配置
         // ============================================================
-
-        // --- Firebase 配置 ---
         const firebaseConfig = {
             apiKey: "AIzaSyCkJhI7FwrRNlNhPn9tp9w_aTKj--SUg7I",
             authDomain: "oscar-io-log-in.firebaseapp.com",
@@ -1716,7 +1711,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- Supabase 配置 ---
+        // ============================================================
+        // 2. Supabase 配置
+        // ============================================================
         const SUPABASE_URL = 'https://mpygxmnugiknpqlkzczm.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_JHvmzxxmPDCyP7PH9eYtzQ_GWOBVHPS';
         const BUCKET = 'files';
@@ -1727,7 +1724,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============================================================
-        // 全局狀態
+        // 3. 全局狀態
         // ============================================================
         let currentUser = null;
         let isAdminMode = false;
@@ -1736,9 +1733,63 @@
         let selectedTime = '1h';
         let lastUploaded = {};
         let _passwordVerified = false;
+        const avatarCanvas = document.getElementById('avatarCanvas');
+        const avatarCtx = avatarCanvas.getContext('2d');
+        const authNavLink = document.getElementById('authNavLink');
+        const avatarBtn = document.getElementById('avatarBtn');
+        const avatarImg = document.getElementById('avatarImg');
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        const authModal = document.getElementById('authModal');
+        const authPanel = document.getElementById('authPanel');
+        const authLoggedInPanel = document.getElementById('authLoggedInPanel');
+        const authDisplayName = document.getElementById('authDisplayName');
+        const authDisplayEmail = document.getElementById('authDisplayEmail');
+        const authLogoutBtn = document.getElementById('authLogoutBtn');
+        const authAdminBtn = document.getElementById('authAdminBtn');
+        const loginTabBtn = document.getElementById('loginTabBtn');
+        const registerTabBtn = document.getElementById('registerTabBtn');
+        const loginPanel = document.getElementById('loginPanel');
+        const registerPanel = document.getElementById('registerPanel');
+        const loginName = document.getElementById('loginName');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginSubmit = document.getElementById('loginSubmitBtn');
+        const loginMessage = document.getElementById('loginMessage');
+        const regName = document.getElementById('regName');
+        const regPassword = document.getElementById('regPassword');
+        const regConfirmPassword = document.getElementById('regConfirmPassword');
+        const registerSubmit = document.getElementById('registerSubmitBtn');
+        const registerMessage = document.getElementById('registerMessage');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const googleRegisterBtn = document.getElementById('googleRegisterBtn');
+        const adminModalUsers = document.getElementById('adminModalUsers');
+        const closeAdminModalUsers = document.getElementById('closeAdminModalUsers');
+        const userTableContainer = document.getElementById('userTableContainer');
+        const fileList = document.getElementById('fileList');
+        const fileCountNum = document.getElementById('fileCountNum');
+        const statusEl = document.getElementById('status');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSuccess = document.getElementById('uploadSuccess');
+        const successFileName = document.getElementById('successFileName');
+        const successFileMeta = document.getElementById('successFileMeta');
+        const uploadModal = document.getElementById('uploadModal');
+        const filePassword = document.getElementById('filePassword');
+        const confirmUploadBtn = document.getElementById('confirmUploadBtn');
+        const uploadFileNameDisplay = document.getElementById('uploadFileNameDisplay');
+        const timeGrid = document.getElementById('timeGrid');
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        const adminUser = document.getElementById('adminUser');
+        const adminPass = document.getElementById('adminPass');
+        const adminError = document.getElementById('adminError');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const contactBtn = document.getElementById('contactBtn');
+        const contactModal = document.getElementById('contactModal');
+        const downloadContainer = document.getElementById('downloadContainer');
+        const mainUI = document.getElementById('mainUI');
 
         // ============================================================
-        // 輔助函數
+        // 4. 輔助函數
         // ============================================================
         function getCurrentUser() { return currentUser; }
 
@@ -1747,21 +1798,20 @@
         function getCurrentUserName() { return currentUser ? currentUser.name : null; }
 
         function showStatus(text, type = 'info') {
-            const el = document.getElementById('status');
-            el.textContent = text;
-            el.className = 'show ' + type;
+            statusEl.textContent = text;
+            statusEl.className = 'show ' + type;
         }
 
         function showLoading(text) {
-            document.getElementById('loadingText').textContent = text || '載入中...';
-            document.getElementById('loadingOverlay').style.display = 'flex';
+            loadingText.textContent = text || '載入中...';
+            loadingOverlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
 
         function hideLoading() {
             if (loadingTimer) return;
             loadingTimer = setTimeout(() => {
-                document.getElementById('loadingOverlay').style.display = 'none';
+                loadingOverlay.style.display = 'none';
                 document.body.style.overflow = 'auto';
                 loadingTimer = null;
             }, 500);
@@ -1852,7 +1902,7 @@
         }
 
         // ============================================================
-        // UI 控制（登入/登出/管理員）
+        // 5. UI 控制（登入/登出/管理員）
         // ============================================================
         function showUI(user) {
             currentUser = user;
@@ -1866,10 +1916,9 @@
             authLoggedInPanel.style.display = 'block';
             authDisplayName.textContent = user.name || '使用者';
             authDisplayEmail.textContent = user.email || '';
-            authAdminBtn.style.display = 'none'; // 管理員按鈕僅在彈窗中
+            authAdminBtn.style.display = 'none';
             localStorage.setItem('currentUser', JSON.stringify(user));
             hideLoading();
-            // 確保退出管理員模式
             if (isAdminMode) exitAdminMode();
             loadFileList();
             startAutoCheck();
@@ -1919,14 +1968,14 @@
         }
 
         function adminLogin() {
-            const user = document.getElementById('adminUser').value.trim();
-            const pass = document.getElementById('adminPass').value.trim();
+            const user = adminUser.value.trim();
+            const pass = adminPass.value.trim();
             if (user === 'admin' && pass === '7891') {
-                document.getElementById('adminLoginModal').classList.remove('show');
+                adminLoginModal.classList.remove('show');
                 enableAdminMode();
                 showStatus('👑 管理員模式已啟用', 'success');
             } else {
-                document.getElementById('adminError').classList.add('show');
+                adminError.classList.add('show');
             }
         }
 
@@ -1939,23 +1988,20 @@
             adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000);
             if (adminClickCount >= 3) {
                 adminClickCount = 0;
-                document.getElementById('adminLoginModal').classList.add('show');
-                document.getElementById('adminError').classList.remove('show');
-                document.getElementById('adminUser').value = '';
-                document.getElementById('adminPass').value = '';
-                document.getElementById('adminPass').focus();
+                adminLoginModal.classList.add('show');
+                adminError.classList.remove('show');
+                adminUser.value = '';
+                adminPass.value = '';
+                adminPass.focus();
             }
         }
 
-        function exitAdminModeHandler() { exitAdminMode(); }
-
-        // 暴露到全局
-        window.exitAdminMode = exitAdminModeHandler;
+        window.exitAdminMode = exitAdminMode;
         window.adminLogin = adminLogin;
         window.adminSecretClick = adminSecretClick;
 
         // ============================================================
-        // 登入/註冊（姓名+密碼）
+        // 6. 🔥 登入/註冊（修復卡頓）
         // ============================================================
         async function googleLogin() {
             showLoading('Google 登入中...');
@@ -1994,26 +2040,50 @@
                 registerSubmit.textContent = '註冊'; }
         }
 
+        // ============================================================
+        // 🔥 核心修復：登入函數（加入超時與錯誤處理）
+        // ============================================================
         async function handleLogin() {
-            const name = loginName.value.trim(),
-                pw = loginPassword.value;
-            if (!name || !pw) { showMsg(loginMessage, '請輸入姓名和密碼', 'error'); return; }
+            const name = loginName.value.trim();
+            const pw = loginPassword.value;
+
+            if (!name || !pw) {
+                showMsg(loginMessage, '請輸入姓名和密碼', 'error');
+                return;
+            }
+
             showLoading('登入中...');
             loginSubmit.disabled = true;
             loginSubmit.innerHTML = '<span class="spinner"></span>登入中...';
+
+            // 設定超時（10 秒）
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('連線逾時，請檢查網路後再試')), 10000);
+            });
+
             try {
-                const snap = await db.ref('users').orderByChild('name').equalTo(name).once('value');
-                if (!snap.exists()) { showMsg(loginMessage, '帳戶或密碼不正確', 'error');
+                const queryPromise = db.ref('users').orderByChild('name').equalTo(name).once('value');
+                const snap = await Promise.race([queryPromise, timeoutPromise]);
+
+                if (!snap.exists()) {
+                    showMsg(loginMessage, '帳戶或密碼不正確', 'error');
                     hideLoading();
                     loginSubmit.disabled = false;
-                    loginSubmit.textContent = '登入'; return; }
+                    loginSubmit.textContent = '登入';
+                    return;
+                }
+
                 let found = false;
                 snap.forEach(child => {
                     const data = child.val();
                     if (data.password === pw) {
                         found = true;
-                        const userData = { name: data.name, email: data.email || '', photo: data.photo || '',
-                            uid: child.key };
+                        const userData = {
+                            name: data.name,
+                            email: data.email || '',
+                            photo: data.photo || '',
+                            uid: child.key
+                        };
                         showUI(userData);
                         closeAuthModal();
                         db.ref('users/' + child.key + '/lastLogin').set(Date.now());
@@ -2021,11 +2091,18 @@
                         loginPassword.value = '';
                     }
                 });
-                if (!found) showMsg(loginMessage, '帳戶或密碼不正確', 'error');
+
+                if (!found) {
+                    showMsg(loginMessage, '帳戶或密碼不正確', 'error');
+                }
                 hideLoading();
-            } catch (e) { showMsg(loginMessage, '登入失敗', 'error');
-                hideLoading(); } finally { loginSubmit.disabled = false;
-                loginSubmit.textContent = '登入'; }
+            } catch (e) {
+                showMsg(loginMessage, '登入失敗：' + e.message, 'error');
+                hideLoading();
+            } finally {
+                loginSubmit.disabled = false;
+                loginSubmit.textContent = '登入';
+            }
         }
 
         function handleLogout() {
@@ -2036,7 +2113,7 @@
         }
 
         // ============================================================
-        // 用戶管理（管理員功能）
+        // 7. 用戶管理（管理員功能）
         // ============================================================
         async function loadUserTable() {
             userTableContainer.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;">載入中...</p>';
@@ -2077,21 +2154,8 @@
         };
 
         // ============================================================
-        // 上傳功能
+        // 8. 上傳功能
         // ============================================================
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const uploadSuccess = document.getElementById('uploadSuccess');
-        const successFileName = document.getElementById('successFileName');
-        const successFileMeta = document.getElementById('successFileMeta');
-        const fileList = document.getElementById('fileList');
-        const fileCountNum = document.getElementById('fileCountNum');
-        const uploadModal = document.getElementById('uploadModal');
-        const filePassword = document.getElementById('filePassword');
-        const confirmUploadBtn = document.getElementById('confirmUploadBtn');
-        const uploadFileNameDisplay = document.getElementById('uploadFileNameDisplay');
-        const timeGrid = document.getElementById('timeGrid');
-
         uploadArea.addEventListener('click', function() {
             const user = getCurrentUser();
             if (!user) {
@@ -2260,7 +2324,7 @@
         }
 
         // ============================================================
-        // 下載核心（使用美化卡片）
+        // 9. 下載核心（使用美化卡片）
         // ============================================================
         function formatSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
@@ -2280,7 +2344,6 @@
 
         async function downloadFileDirect(url, fileName, password) {
             if (password && !_passwordVerified) {
-                // 顯示密碼輸入
                 const section = document.querySelector('#downloadContainer .password-section');
                 if (section) {
                     section.classList.add('show');
@@ -2289,7 +2352,6 @@
                     const btn = document.getElementById('downloadBtn');
                     if (input) input.focus();
                     if (btn) btn.disabled = true;
-                    // 綁定驗證
                     const verify = () => {
                         const entered = input.value.trim();
                         if (entered === password) {
@@ -2305,8 +2367,7 @@
                         }
                     };
                     input.onkeydown = (e) => { if (e.key === 'Enter') verify(); };
-                    const btn2 = document.querySelector('#downloadContainer .btn-download');
-                    if (btn2) btn2.onclick = verify;
+                    if (btn) btn.onclick = verify;
                 }
                 return;
             }
@@ -2337,7 +2398,6 @@
                         btn.disabled = false;
                     }, 2000);
                 }
-                // 顯示成功訊息
                 const container = document.getElementById('downloadContainer');
                 const fileIcon = container.querySelector('.file-icon');
                 if (fileIcon) {
@@ -2351,7 +2411,6 @@
                     btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 重試';
                     btn.disabled = false;
                 }
-                // 顯示錯誤
                 const container = document.getElementById('downloadContainer');
                 const icon = container.querySelector('.file-icon');
                 if (icon) {
@@ -2370,14 +2429,13 @@
                 if (uploader) uploader.style.display = 'none';
                 const passwordSection = container.querySelector('.password-section');
                 if (passwordSection) passwordSection.classList.remove('show');
-                // 顯示重試按鈕
                 const retryBtn = container.querySelector('#retryBtn');
                 if (retryBtn) retryBtn.style.display = 'inline-block';
             }
         }
 
         // ============================================================
-        // 載入檔案列表（權限控制）
+        // 10. 載入檔案列表
         // ============================================================
         async function loadFileList() {
             const user = getCurrentUser();
@@ -2458,7 +2516,6 @@
         }
 
         function handleDownloadClick(fileId, url, fileName, password) {
-            // 切換到下載頁面
             showDownloadPage(fileName, url, password);
         }
 
@@ -2481,16 +2538,13 @@
         window.handleDownloadClick = handleDownloadClick;
 
         // ============================================================
-        // 顯示下載頁面（美化卡片）
+        // 11. 顯示下載頁面
         // ============================================================
         function showDownloadPage(fileName, downloadURL, password) {
-            const container = document.getElementById('downloadContainer');
-            const mainUI = document.getElementById('mainUI');
             mainUI.style.display = 'none';
-            container.style.display = 'block';
+            downloadContainer.style.display = 'block';
 
-            // 構建 HTML
-            container.innerHTML = `
+            downloadContainer.innerHTML = `
                 <div class="download-card" id="downloadCard">
                     <div class="brand">
                         <i class="fas fa-cloud-upload-alt"></i>
@@ -2528,7 +2582,6 @@
                 </div>
             `;
 
-            // 設定下載按鈕
             const btn = document.getElementById('downloadBtn');
             if (btn) {
                 btn.onclick = function() {
@@ -2537,7 +2590,6 @@
                 };
             }
 
-            // 重試按鈕
             const retry = document.getElementById('retryBtn');
             if (retry) {
                 retry.onclick = function() {
@@ -2545,7 +2597,6 @@
                 };
             }
 
-            // 如果有密碼，顯示密碼輸入
             if (password) {
                 const section = document.getElementById('passwordSection');
                 if (section) {
@@ -2572,40 +2623,34 @@
                 }
             }
 
-            // 顯示成功狀態，隱藏載入
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('successState').style.display = 'block';
         }
 
         // ============================================================
-        // 分享連結處理（從 URL 參數讀取）
+        // 12. 分享連結處理
         // ============================================================
         async function handleShareLink() {
             const params = new URLSearchParams(window.location.search);
             const shortCode = params.get('download');
 
             if (params.has('admin')) {
-                document.getElementById('adminLoginModal').classList.add('show');
-                document.getElementById('adminError').classList.remove('show');
-                document.getElementById('adminUser').value = '';
-                document.getElementById('adminPass').value = '';
+                adminLoginModal.classList.add('show');
+                adminError.classList.remove('show');
+                adminUser.value = '';
+                adminPass.value = '';
                 return;
             }
 
             if (!shortCode) {
-                // 正常主頁
-                document.getElementById('mainUI').style.display = 'block';
-                document.getElementById('downloadContainer').style.display = 'none';
+                mainUI.style.display = 'block';
+                downloadContainer.style.display = 'none';
                 return;
             }
 
-            // 有短碼：顯示下載頁面
-            document.getElementById('mainUI').style.display = 'none';
-            const container = document.getElementById('downloadContainer');
-            container.style.display = 'block';
-
-            // 顯示載入
-            container.innerHTML = `
+            mainUI.style.display = 'none';
+            downloadContainer.style.display = 'block';
+            downloadContainer.innerHTML = `
                 <div class="download-card" id="downloadCard">
                     <div class="brand">
                         <i class="fas fa-cloud-upload-alt"></i>
@@ -2622,8 +2667,7 @@
                 const { data, error } = await supabaseClient.from('files').select('*').eq('short_code', shortCode)
                     .maybeSingle();
                 if (error || !data) {
-                    // 顯示錯誤
-                    container.innerHTML = `
+                    downloadContainer.innerHTML = `
                         <div class="download-card error-state">
                             <div class="brand">
                                 <i class="fas fa-cloud-upload-alt"></i>
@@ -2639,11 +2683,10 @@
                     return;
                 }
 
-                // 檢查過期
                 if (data.expiry_time) {
                     const expiry = new Date(data.expiry_time);
                     if (expiry < new Date()) {
-                        container.innerHTML = `
+                        downloadContainer.innerHTML = `
                             <div class="download-card error-state">
                                 <div class="brand">
                                     <i class="fas fa-cloud-upload-alt"></i>
@@ -2655,24 +2698,21 @@
                                 <button class="btn-download" onclick="goHome()" style="background:#6a7a8e;box-shadow:none;margin-top:12px;">返回首頁</button>
                             </div>
                         `;
-                        // 從資料庫刪除
                         await supabaseClient.from('files').delete().eq('id', data.id);
                         return;
                     }
                 }
 
-                // 更新下載次數
                 supabaseClient.from('files').update({ download_count: (data.download_count || 0) + 1 }).eq('id', data.id)
                     .then();
 
-                // 顯示成功下載頁
                 const fileName = data.file_name;
                 const downloadURL = data.download_url;
                 const password = data.password || '';
                 const sizeMB = (data.file_size / 1024 / 1024).toFixed(1);
                 const uploaderName = data.uploader_name || data.uploader_email || '匿名用戶';
 
-                container.innerHTML = `
+                downloadContainer.innerHTML = `
                     <div class="download-card" id="downloadCard">
                         <div class="brand">
                             <i class="fas fa-cloud-upload-alt"></i>
@@ -2694,7 +2734,6 @@
                     </div>
                 `;
 
-                // 綁定下載按鈕
                 const btn = document.getElementById('downloadBtn');
                 if (btn) {
                     btn.onclick = function() {
@@ -2703,7 +2742,6 @@
                     };
                 }
 
-                // 如果有密碼，處理密碼輸入
                 if (password) {
                     const section = document.getElementById('passwordSection');
                     if (section) {
@@ -2727,13 +2765,12 @@
                         };
                         if (input) input.onkeydown = (e) => { if (e.key === 'Enter') verify(); };
                         if (btn2) btn2.onclick = verify;
-                        // 密碼輸入時禁用按鈕
                         if (btn2) btn2.disabled = true;
                     }
                 }
 
             } catch (err) {
-                container.innerHTML = `
+                downloadContainer.innerHTML = `
                     <div class="download-card error-state">
                         <div class="brand">
                             <i class="fas fa-cloud-upload-alt"></i>
@@ -2750,7 +2787,7 @@
         }
 
         // ============================================================
-        // 定時檢查 & 清理過期
+        // 13. 定時檢查 & 清理過期
         // ============================================================
         function startAutoCheck() {
             stopAutoCheck();
@@ -2792,25 +2829,9 @@
         }
 
         // ============================================================
-        // 初始化與事件綁定
+        // 14. 初始化與事件綁定
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // 綁定登入/註冊事件
-            const loginTabBtn = document.getElementById('loginTabBtn');
-            const registerTabBtn = document.getElementById('registerTabBtn');
-            const loginSubmit = document.getElementById('loginSubmitBtn');
-            const registerSubmit = document.getElementById('registerSubmitBtn');
-            const googleLoginBtn = document.getElementById('googleLoginBtn');
-            const googleRegisterBtn = document.getElementById('googleRegisterBtn');
-            const authLogoutBtn = document.getElementById('authLogoutBtn');
-            const authNavLink = document.getElementById('authNavLink');
-            const avatarBtn = document.getElementById('avatarBtn');
-            const authAdminBtn = document.getElementById('authAdminBtn');
-            const closeAdminModalUsers = document.getElementById('closeAdminModalUsers');
-            const adminModalUsers = document.getElementById('adminModalUsers');
-            const contactBtn = document.getElementById('contactBtn');
-            const contactModal = document.getElementById('contactModal');
-
             loginTabBtn.addEventListener('click', switchToLogin);
             registerTabBtn.addEventListener('click', switchToRegister);
             loginSubmit.addEventListener('click', handleLogin);
@@ -2874,14 +2895,12 @@
                 hideUI();
             }
 
-            // 處理分享連結
             handleShareLink();
 
-            // 啟動過期清理
             setInterval(cleanExpiredFiles, 60000);
             setTimeout(cleanExpiredFiles, 3000);
 
-            console.log('🍎 輕盤 · 完整美化版已啟動');
+            console.log('🍎 輕盤 · 登入修復版已啟動');
             console.log('👤 當前用戶:', getCurrentUserName() || '未登入');
             console.log('🔑 管理員入口: ?admin');
         });
