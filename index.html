@@ -1698,8 +1698,10 @@
 
     <script>
         // ============================================================
-        // 1. Firebase 配置
+        // 完整 JavaScript（含密码下载逻辑修正）
         // ============================================================
+
+        // --- Firebase 配置 ---
         const firebaseConfig = {
             apiKey: "AIzaSyCkJhI7FwrRNlNhPn9tp9w_aTKj--SUg7I",
             authDomain: "oscar-io-log-in.firebaseapp.com",
@@ -1711,9 +1713,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ============================================================
-        // 2. Supabase 配置
-        // ============================================================
+        // --- Supabase 配置 ---
         const SUPABASE_URL = 'https://mpygxmnugiknpqlkzczm.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_JHvmzxxmPDCyP7PH9eYtzQ_GWOBVHPS';
         const BUCKET = 'files';
@@ -1724,7 +1724,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============================================================
-        // 3. 全局狀態
+        // 全局狀態
         // ============================================================
         let currentUser = null;
         let isAdminMode = false;
@@ -1789,7 +1789,7 @@
         const mainUI = document.getElementById('mainUI');
 
         // ============================================================
-        // 4. 輔助函數
+        // 輔助函數
         // ============================================================
         function getCurrentUser() { return currentUser; }
 
@@ -1902,7 +1902,7 @@
         }
 
         // ============================================================
-        // 5. UI 控制（登入/登出/管理員）
+        // UI 控制（登入/登出/管理員）
         // ============================================================
         function showUI(user) {
             currentUser = user;
@@ -2001,7 +2001,7 @@
         window.adminSecretClick = adminSecretClick;
 
         // ============================================================
-        // 6. 🔥 登入/註冊（修復卡頓）
+        // 登入/註冊
         // ============================================================
         async function googleLogin() {
             showLoading('Google 登入中...');
@@ -2040,31 +2040,19 @@
                 registerSubmit.textContent = '註冊'; }
         }
 
-        // ============================================================
-        // 🔥 核心修復：登入函數（加入超時與錯誤處理）
-        // ============================================================
         async function handleLogin() {
-            const name = loginName.value.trim();
-            const pw = loginPassword.value;
-
-            if (!name || !pw) {
-                showMsg(loginMessage, '請輸入姓名和密碼', 'error');
-                return;
-            }
-
+            const name = loginName.value.trim(),
+                pw = loginPassword.value;
+            if (!name || !pw) { showMsg(loginMessage, '請輸入姓名和密碼', 'error'); return; }
             showLoading('登入中...');
             loginSubmit.disabled = true;
             loginSubmit.innerHTML = '<span class="spinner"></span>登入中...';
-
-            // 設定超時（10 秒）
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => reject(new Error('連線逾時，請檢查網路後再試')), 10000);
             });
-
             try {
                 const queryPromise = db.ref('users').orderByChild('name').equalTo(name).once('value');
                 const snap = await Promise.race([queryPromise, timeoutPromise]);
-
                 if (!snap.exists()) {
                     showMsg(loginMessage, '帳戶或密碼不正確', 'error');
                     hideLoading();
@@ -2072,18 +2060,13 @@
                     loginSubmit.textContent = '登入';
                     return;
                 }
-
                 let found = false;
                 snap.forEach(child => {
                     const data = child.val();
                     if (data.password === pw) {
                         found = true;
-                        const userData = {
-                            name: data.name,
-                            email: data.email || '',
-                            photo: data.photo || '',
-                            uid: child.key
-                        };
+                        const userData = { name: data.name, email: data.email || '', photo: data.photo || '',
+                            uid: child.key };
                         showUI(userData);
                         closeAuthModal();
                         db.ref('users/' + child.key + '/lastLogin').set(Date.now());
@@ -2091,10 +2074,7 @@
                         loginPassword.value = '';
                     }
                 });
-
-                if (!found) {
-                    showMsg(loginMessage, '帳戶或密碼不正確', 'error');
-                }
+                if (!found) showMsg(loginMessage, '帳戶或密碼不正確', 'error');
                 hideLoading();
             } catch (e) {
                 showMsg(loginMessage, '登入失敗：' + e.message, 'error');
@@ -2113,7 +2093,7 @@
         }
 
         // ============================================================
-        // 7. 用戶管理（管理員功能）
+        // 用戶管理
         // ============================================================
         async function loadUserTable() {
             userTableContainer.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;">載入中...</p>';
@@ -2154,7 +2134,7 @@
         };
 
         // ============================================================
-        // 8. 上傳功能
+        // 上傳功能
         // ============================================================
         uploadArea.addEventListener('click', function() {
             const user = getCurrentUser();
@@ -2324,7 +2304,7 @@
         }
 
         // ============================================================
-        // 9. 下載核心（使用美化卡片）
+        // 🔥 核心下载逻辑（修正密码按钮）
         // ============================================================
         function formatSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
@@ -2342,7 +2322,9 @@
             window.location.href = getBaseUrl();
         }
 
+        // 下载核心函数，处理密码验证
         async function downloadFileDirect(url, fileName, password) {
+            // 如果有密码且未验证，则显示密码输入框，并让按钮执行验证
             if (password && !_passwordVerified) {
                 const section = document.querySelector('#downloadContainer .password-section');
                 if (section) {
@@ -2350,28 +2332,41 @@
                     const input = section.querySelector('input');
                     const error = section.querySelector('.error-msg');
                     const btn = document.getElementById('downloadBtn');
-                    if (input) input.focus();
-                    if (btn) btn.disabled = true;
-                    const verify = () => {
-                        const entered = input.value.trim();
-                        if (entered === password) {
-                            error.classList.remove('show');
-                            _passwordVerified = true;
-                            section.classList.remove('show');
-                            if (btn) btn.disabled = false;
-                            downloadFileDirect(url, fileName, password);
-                        } else {
-                            error.classList.add('show');
-                            input.value = '';
-                            input.focus();
-                        }
-                    };
-                    input.onkeydown = (e) => { if (e.key === 'Enter') verify(); };
-                    if (btn) btn.onclick = verify;
+                    if (input) {
+                        input.value = '';
+                        input.focus();
+                    }
+                    if (btn) {
+                        // 按钮改为“确认密码并下载”
+                        btn.innerHTML = '<i class="fas fa-check"></i> 確認密碼並下載';
+                        btn.disabled = false;
+                        // 点击验证
+                        btn.onclick = function() {
+                            const entered = input.value.trim();
+                            if (entered === password) {
+                                error.classList.remove('show');
+                                _passwordVerified = true;
+                                section.classList.remove('show');
+                                // 开始下载
+                                downloadFileDirect(url, fileName, password);
+                            } else {
+                                error.classList.add('show');
+                                input.value = '';
+                                input.focus();
+                            }
+                        };
+                        // Enter键也触发验证
+                        input.onkeydown = (e) => {
+                            if (e.key === 'Enter') {
+                                btn.click();
+                            }
+                        };
+                    }
                 }
                 return;
             }
 
+            // 验证通过或无需密码，开始下载
             _passwordVerified = false;
             const btn = document.getElementById('downloadBtn');
             if (btn) {
@@ -2398,6 +2393,7 @@
                         btn.disabled = false;
                     }, 2000);
                 }
+                // 显示成功信息
                 const container = document.getElementById('downloadContainer');
                 const fileIcon = container.querySelector('.file-icon');
                 if (fileIcon) {
@@ -2435,7 +2431,7 @@
         }
 
         // ============================================================
-        // 10. 載入檔案列表
+        // 載入檔案列表
         // ============================================================
         async function loadFileList() {
             const user = getCurrentUser();
@@ -2538,11 +2534,16 @@
         window.handleDownloadClick = handleDownloadClick;
 
         // ============================================================
-        // 11. 顯示下載頁面
+        // 顯示下載頁面（密碼按鈕修正）
         // ============================================================
         function showDownloadPage(fileName, downloadURL, password) {
             mainUI.style.display = 'none';
             downloadContainer.style.display = 'block';
+
+            // 构建HTML
+            let btnText = password ? '確認密碼並下載' : '立即下載';
+            let btnIcon = password ? 'fa-check' : 'fa-arrow-down';
+            let hintText = password ? '請輸入密碼後點擊按鈕' : '⚡ 全速下載 · 無需登入';
 
             downloadContainer.innerHTML = `
                 <div class="download-card" id="downloadCard">
@@ -2559,12 +2560,12 @@
                         <div class="file-name" id="fileName">${fileName}</div>
                         <div class="file-meta" id="fileMeta">未知大小 · 公開分享</div>
                         <div class="file-uploader" id="fileUploader">👤 上傳者：未知</div>
-                        <div class="password-section" id="passwordSection">
+                        <div class="password-section" id="passwordSection" style="${password ? 'display:block;' : 'display:none;'}">
                             <input type="password" id="passwordInput" placeholder="請輸入檔案密碼" />
                             <div class="error-msg" id="passwordError">❌ 密碼錯誤，請重新輸入</div>
                         </div>
-                        <button class="btn-download" id="downloadBtn"><i class="fas fa-arrow-down"></i> 立即下載</button>
-                        <div class="hint" style="font-size:14px;color:#6a7a8e;margin:4px 0 16px;">⚡ 全速下載 · 無需登入</div>
+                        <button class="btn-download" id="downloadBtn"><i class="${btnIcon}"></i> ${btnText}</button>
+                        <div class="hint" style="font-size:14px;color:#6a7a8e;margin:4px 0 16px;">${hintText}</div>
                         <a href="#" class="back-link" onclick="goHome()">← 返回首頁</a>
                     </div>
                     <div class="error-state" id="errorState" style="display:none;">
@@ -2582,35 +2583,19 @@
                 </div>
             `;
 
+            // 綁定下載按鈕
             const btn = document.getElementById('downloadBtn');
             if (btn) {
-                btn.onclick = function() {
-                    _passwordVerified = false;
-                    downloadFileDirect(downloadURL, fileName, password);
-                };
-            }
-
-            const retry = document.getElementById('retryBtn');
-            if (retry) {
-                retry.onclick = function() {
-                    window.location.reload();
-                };
-            }
-
-            if (password) {
-                const section = document.getElementById('passwordSection');
-                if (section) {
-                    section.classList.add('show');
-                    const input = document.getElementById('passwordInput');
-                    const error = document.getElementById('passwordError');
-                    const btn2 = document.getElementById('downloadBtn');
-                    const verify = () => {
+                if (password) {
+                    // 有密碼：按鈕觸發驗證
+                    btn.onclick = function() {
+                        const input = document.getElementById('passwordInput');
+                        const error = document.getElementById('passwordError');
                         const entered = input.value.trim();
                         if (entered === password) {
                             error.classList.remove('show');
                             _passwordVerified = true;
-                            section.classList.remove('show');
-                            if (btn2) btn2.disabled = false;
+                            document.getElementById('passwordSection').style.display = 'none';
                             downloadFileDirect(downloadURL, fileName, password);
                         } else {
                             error.classList.add('show');
@@ -2618,17 +2603,39 @@
                             input.focus();
                         }
                     };
-                    if (input) input.onkeydown = (e) => { if (e.key === 'Enter') verify(); };
-                    if (btn2) btn2.onclick = verify;
+                    // Enter鍵支援
+                    const input = document.getElementById('passwordInput');
+                    if (input) {
+                        input.onkeydown = (e) => {
+                            if (e.key === 'Enter') {
+                                btn.click();
+                            }
+                        };
+                    }
+                } else {
+                    // 無密碼：直接下載
+                    btn.onclick = function() {
+                        _passwordVerified = false;
+                        downloadFileDirect(downloadURL, fileName, '');
+                    };
                 }
             }
 
+            // 重試按鈕
+            const retry = document.getElementById('retryBtn');
+            if (retry) {
+                retry.onclick = function() {
+                    window.location.reload();
+                };
+            }
+
+            // 隱藏載入狀態，顯示成功狀態
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('successState').style.display = 'block';
         }
 
         // ============================================================
-        // 12. 分享連結處理
+        // 分享連結處理（包含密碼邏輯）
         // ============================================================
         async function handleShareLink() {
             const params = new URLSearchParams(window.location.search);
@@ -2712,6 +2719,11 @@
                 const sizeMB = (data.file_size / 1024 / 1024).toFixed(1);
                 const uploaderName = data.uploader_name || data.uploader_email || '匿名用戶';
 
+                // 构建下载页面
+                let btnText = password ? '確認密碼並下載' : '立即下載';
+                let btnIcon = password ? 'fa-check' : 'fa-arrow-down';
+                let hintText = password ? '請輸入密碼後點擊按鈕' : '⚡ 全速下載 · 無需登入';
+
                 downloadContainer.innerHTML = `
                     <div class="download-card" id="downloadCard">
                         <div class="brand">
@@ -2723,39 +2735,29 @@
                             <div class="file-name" id="fileName">${fileName}</div>
                             <div class="file-meta" id="fileMeta">${sizeMB} MB · 公開分享</div>
                             <div class="file-uploader" id="fileUploader">👤 上傳者：${uploaderName}</div>
-                            <div class="password-section" id="passwordSection">
+                            <div class="password-section" id="passwordSection" style="${password ? 'display:block;' : 'display:none;'}">
                                 <input type="password" id="passwordInput" placeholder="請輸入檔案密碼" />
                                 <div class="error-msg" id="passwordError">❌ 密碼錯誤，請重新輸入</div>
                             </div>
-                            <button class="btn-download" id="downloadBtn"><i class="fas fa-arrow-down"></i> 立即下載</button>
-                            <div class="hint" style="font-size:14px;color:#6a7a8e;margin:4px 0 16px;">⚡ 全速下載 · 無需登入</div>
+                            <button class="btn-download" id="downloadBtn"><i class="${btnIcon}"></i> ${btnText}</button>
+                            <div class="hint" style="font-size:14px;color:#6a7a8e;margin:4px 0 16px;">${hintText}</div>
                             <a href="#" class="back-link" onclick="goHome()">← 返回首頁</a>
                         </div>
                     </div>
                 `;
 
+                // 綁定按鈕
                 const btn = document.getElementById('downloadBtn');
                 if (btn) {
-                    btn.onclick = function() {
-                        _passwordVerified = false;
-                        downloadFileDirect(downloadURL, fileName, password);
-                    };
-                }
-
-                if (password) {
-                    const section = document.getElementById('passwordSection');
-                    if (section) {
-                        section.classList.add('show');
-                        const input = document.getElementById('passwordInput');
-                        const error = document.getElementById('passwordError');
-                        const btn2 = document.getElementById('downloadBtn');
-                        const verify = () => {
+                    if (password) {
+                        btn.onclick = function() {
+                            const input = document.getElementById('passwordInput');
+                            const error = document.getElementById('passwordError');
                             const entered = input.value.trim();
                             if (entered === password) {
                                 error.classList.remove('show');
                                 _passwordVerified = true;
-                                section.classList.remove('show');
-                                if (btn2) btn2.disabled = false;
+                                document.getElementById('passwordSection').style.display = 'none';
                                 downloadFileDirect(downloadURL, fileName, password);
                             } else {
                                 error.classList.add('show');
@@ -2763,9 +2765,19 @@
                                 input.focus();
                             }
                         };
-                        if (input) input.onkeydown = (e) => { if (e.key === 'Enter') verify(); };
-                        if (btn2) btn2.onclick = verify;
-                        if (btn2) btn2.disabled = true;
+                        const input = document.getElementById('passwordInput');
+                        if (input) {
+                            input.onkeydown = (e) => {
+                                if (e.key === 'Enter') {
+                                    btn.click();
+                                }
+                            };
+                        }
+                    } else {
+                        btn.onclick = function() {
+                            _passwordVerified = false;
+                            downloadFileDirect(downloadURL, fileName, '');
+                        };
                     }
                 }
 
@@ -2787,7 +2799,7 @@
         }
 
         // ============================================================
-        // 13. 定時檢查 & 清理過期
+        // 定時檢查 & 清理過期
         // ============================================================
         function startAutoCheck() {
             stopAutoCheck();
@@ -2829,7 +2841,7 @@
         }
 
         // ============================================================
-        // 14. 初始化與事件綁定
+        // 初始化與事件綁定
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             loginTabBtn.addEventListener('click', switchToLogin);
@@ -2900,7 +2912,7 @@
             setInterval(cleanExpiredFiles, 60000);
             setTimeout(cleanExpiredFiles, 3000);
 
-            console.log('🍎 輕盤 · 登入修復版已啟動');
+            console.log('🍎 輕盤 · 密碼下載修正版已啟動');
             console.log('👤 當前用戶:', getCurrentUserName() || '未登入');
             console.log('🔑 管理員入口: ?admin');
         });
